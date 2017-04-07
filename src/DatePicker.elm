@@ -224,8 +224,7 @@ setFilter isDisabled (DatePicker model) =
 
 {-| The date picker update function.  The third value in the returned
 tuple represents the picked date, it is `Nothing` if no date was
-picked or if the previously-picked date has not changed and `Just`
-some date if it has.
+picked and `Just` some date if one was.
 -}
 update : Msg -> DatePicker -> ( DatePicker, Cmd Msg, Maybe Date )
 update msg (DatePicker ({ forceOpen, currentMonth, pickedDate, settings } as model)) =
@@ -257,15 +256,18 @@ update msg (DatePicker ({ forceOpen, currentMonth, pickedDate, settings } as mod
         Change ->
             let
                 ( valid, newPickedDate ) =
-                    case settings.parser model.inputText of
-                        Err _ ->
-                            ( False, pickedDate )
-
-                        Ok date ->
-                            if settings.isDisabled date then
+                    if isWhitespace model.inputText then
+                        ( True, Nothing )
+                    else
+                        case settings.parser model.inputText of
+                            Err _ ->
                                 ( False, pickedDate )
-                            else
-                                ( True, Just date )
+
+                            Ok date ->
+                                if settings.isDisabled date then
+                                    ( False, pickedDate )
+                                else
+                                    ( True, Just date )
 
                 month =
                     newPickedDate ?> currentMonth
@@ -280,10 +282,7 @@ update msg (DatePicker ({ forceOpen, currentMonth, pickedDate, settings } as mod
                                     |> Maybe.withDefault ""
                         }
                 , Cmd.none
-                , if valid then
-                    newPickedDate
-                  else
-                    Nothing
+                , newPickedDate
                 )
 
         Focus ->
@@ -480,6 +479,8 @@ mkClassList { classNamespace } cs =
     List.map (\( c, b ) -> ( classNamespace ++ c, b )) cs
         |> Attrs.classList
 
+isWhitespace : String -> Bool
+isWhitespace = String.isEmpty << String.trim
 
 (!) : Model -> List (Cmd Msg) -> ( DatePicker, Cmd Msg, Maybe Date )
 (!) m cs =
