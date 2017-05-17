@@ -448,9 +448,16 @@ datePicker pickedDate settings ({ focused, today } as model) =
                 disabled =
                     settings.isDisabled d
 
+                onDayClick =
+                    Json.succeed >>
+                        onWithOptions
+                            "click"
+                            { stopPropagation = True
+                            , preventDefault = True }
+
                 props =
                     if not disabled then
-                        [ onClick (Pick (Just d)) ]
+                        [ onDayClick (Pick (Just d)) ]
                     else
                         []
             in
